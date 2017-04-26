@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <sys/types.h>
 #include <sys/wait.h>
 
 char* prompt(void) {
@@ -35,19 +36,26 @@ char* prompt(void) {
 int main(/*int argc, char** argv*/) {
 	char* cmd;
 
-	do {	
+	do {
+
 		char* args[] = {"", NULL};
 		cmd = prompt();
 
-		if (cmd != NULL) {
-			if (fork() == 0) {
+		if (cmd != NULL && cmd[0] != '\0') {
+			pid_t pid = fork();
+			if (pid == 0) {
 				// Child process
-				execvp(cmd, args);
+				if(execvp(cmd, args) == -1) {
+					puts("Command failed");
+					exit(1);
+				}
 			} else {
 				// Parent process waits for the executed process to terminate
-				wait(NULL);
+				waitpid(pid, NULL, 0);
 			}
-		}		
+		}
+
 		free(cmd);
+
 	} while(cmd != NULL);
 }
