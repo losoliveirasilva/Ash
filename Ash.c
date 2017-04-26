@@ -33,17 +33,21 @@ char* prompt(void) {
 }
 
 int main(/*int argc, char** argv*/) {
-	char* args[] = {"", NULL};
-	char* cmd = prompt();
+	char* cmd;
 
-	if (cmd != NULL) {
-		if (fork() == 0) {
-			// Child process
-			execvp(cmd, args);
-		} else {
-			// Parent process waits for the executed process to terminate
-			wait(NULL);
-		}
+	do {	
+		char* args[] = {"", NULL};
+		cmd = prompt();
+
+		if (cmd != NULL) {
+			if (fork() == 0) {
+				// Child process
+				execvp(cmd, args);
+			} else {
+				// Parent process waits for the executed process to terminate
+				wait(NULL);
+			}
+		}		
 		free(cmd);
-	}
+	} while(cmd != NULL);
 }
