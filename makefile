@@ -1,4 +1,4 @@
-CFLAGS = -std=c11 -Wall -Wextra -Werror
+CFLAGS = -std=c11 -Wall -Wextra -Werror -g
 
 all: Ash
 
