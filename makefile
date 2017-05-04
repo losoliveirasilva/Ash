@@ -1,6 +1,10 @@
-CFLAGS = -std=c11 -Wall -Wextra -Werror -g
+TARGET = Ash
+CFLAGS = -std=c11 -Wall -Wextra -Werror -pedantic -O
 
-all: Ash
+all: $(TARGET)
 
-Ash: Ash.c
-	$(CC) $(CFLAGS) $^ -o $@
+debug: CFLAGS += -g
+debug: $(TARGET)
+
+run: $(TARGET)
+	@./$(TARGET)
