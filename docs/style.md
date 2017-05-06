@@ -3,25 +3,27 @@
 This is a short document describing coding style for the Ash project. Pull
 requests that do not follow these, will not be accepted.
 
+We recommend using the [editorconfig](http://editorconfig.org/) plugin on your
+preferred editor.
+
 ### I. Indentation
 
 * Indentation should be 4 characters long and use tab characters.
 
 * Do NOT use spaces for indentation.
 
-* In switch statements, 'case' labels should be indented:
+* In switch statements, 'case' labels should NOT be indented:
     ```
-    switch (ch)
-    {
-        case 'a':
-        case 'b':
-            foo = bar;
-            break;
-        case 'c':
-        case 'd':
-            /* fall through */
-        default:
-            break;
+    switch (ch) {
+    case 'a':
+    case 'b':
+        foo = bar;
+        break;
+    case 'c':
+    case 'd':
+        /* fall through */
+    default:
+        break;
     }
     ```
 
@@ -36,17 +38,17 @@ requests that do not follow these, will not be accepted.
 ### III. Placing Braces and Spaces
 
 * For if-else, for, do-while, while, switch etc, place the opening brace on the
-  next line:
+  same line.
 
     ```
-    if (x is true)
-    {
+    if (x is true) {
         /* code goes here. */
+    } else {
+        /* other code goes here. */
     }
 
-    else
-    {
-        /* other code goes here. */
+    while (condition) {
+        /* code goes here */
     }
     ```
 
