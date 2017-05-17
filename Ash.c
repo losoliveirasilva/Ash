@@ -1,83 +1,73 @@
+#define  _GNU_SOURCE
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <pwd.h>
-#include <string.h>
 
-const char *getUserDir()
+// TODO these should be in header files
+char* prompt(void);
+char* get_pretty_wd(void);
+
+/**
+ * @brief Prompts the user for a command.
+ *
+ * @return The string that was entered by the user
+ */
+char* prompt(void)
 {
-	char *username;
-	uid_t uid = geteuid();
-	struct passwd *pw = getpwuid(uid);
-
-	if (pw) {
-		username = malloc(strlen(pw->pw_name));
-		strcpy(username, pw->pw_dir);
-		return username;
-	}
-
-	return "";
-}
-
-char* prompt(char* dir)
-{
-	printf("Ash %s> ", dir);
+	char* wd = get_pretty_wd();
+	printf("Ash %s> ", wd);
+	free(wd);
 
 	/*
 	 * TODO This currently limits the size of the command, it should realloc
 	 * when reads more than 100 chars.
 	 */
-	char* line = malloc(100);
+	char* buffer = malloc(100);
 
-	if(line == NULL)
+	if(buffer == NULL)
 		return NULL;
 
 	size_t i = 0;
-	int c;
 
 	for(;;) {
-		if ((c = fgetc(stdin)) == EOF) /* Ctrl+d */
+		int c = fgetc(stdin);
+
+		if (c == EOF) { /* Ctrl+d */
+			free(buffer);
 			return NULL;
+		}
 
 		if (c != '\n')
-			line[i++] = c;
+			buffer[i++] = c;
 		else /* Enter pressed */
 			break;
 	}
 
-	line[i] = '\0';
-	return line;
+	buffer[i] = '\0';
+	return buffer;
 }
 
-char* getCurrDir()
+/**
+ * @brief Returns a formatted string of the current directory.
+ *
+ * @details Basically it substitutes the $HOME part of the current directory
+ *          path string with a '~'.
+ */
+char* get_pretty_wd(void)
 {
-	int slashcount = 0;
-	unsigned int i = 0;
+	char* cwd = get_current_dir_name();
+	char* home = getenv("HOME");
+	size_t hlen = strlen(home);
 
-	char buff[100 + 1];
-	char* cwd = getcwd( buff, 100 + 1 );
-
-	if( cwd != NULL ) {
-		for(; i < strlen(cwd); ++i)
-			if(cwd[i] == '/' && slashcount++ == 2)
-				break;
-	}
-
-	char* aux = malloc(i);
-	memmove(aux, cwd, i);
-	aux[i] = '\0';
-
-	char* userdir = malloc(strlen(getUserDir()));
-	strcpy(userdir, getUserDir());
-
-	if(strcmp(aux, userdir) == 0) {
-		char* dirWithTilde = malloc(strlen(cwd)-1);
-		dirWithTilde[0] = '~';
-		memmove(dirWithTilde+1, cwd+i, strlen(cwd)-i);
-		return dirWithTilde;
+	/* checks if cwd starts with HOME */
+	if (strncmp(cwd, home, hlen) == 0) {
+		size_t cwdlen = strlen(cwd);
+		cwd[0] = '~';
+		memmove(cwd + 1, cwd + hlen, cwdlen - hlen + 1);
+		cwd = realloc(cwd, cwdlen - hlen + 1);
 	}
 
 	return cwd;
@@ -89,13 +79,14 @@ int main(/*int argc, char** argv*/)
 
 	do {
 		char* args[] = {"", NULL};
-		cmd = prompt(getCurrDir());
+		cmd = prompt();
 
 		if (cmd != NULL && cmd[0] != '\0') {
 			pid_t pid = fork();
 			if (pid == 0) {
 				/* Child process */
 				if(execvp(cmd, args) == -1) {
+					free(cmd);
 					puts("Command failed");
 					exit(1);
 				}
